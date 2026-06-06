@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Virtual Environment
+venv/
+.venv/
+
+# Logs
+*.log
+
+# OS Files
+.DS_Store
+
+# Zip Files
+*.zip
+
+# Ignore Dataset
+data/
+
+# Temporary Files
+*.tmp
+
