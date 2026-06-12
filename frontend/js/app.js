@@ -703,7 +703,13 @@ const submitForm = async (event) => {
         
         // Update main price display
         const formattedPrice = `₹ ${Number(result.transaction_price).toLocaleString('en-IN')}`;
-        priceOutput.textContent = formattedPrice;
+        
+        // For buying_personal, show price range in main display
+        if (transaction_type === 'buying_personal' && result.price_range_min && result.price_range_max) {
+            priceOutput.textContent = `₹ ${Number(result.price_range_min).toLocaleString('en-IN')} - ₹ ${Number(result.price_range_max).toLocaleString('en-IN')}`;
+        } else {
+            priceOutput.textContent = formattedPrice;
+        }
         
         // Update market value
         document.getElementById('marketValue').textContent = `₹ ${Number(result.predicted_price).toLocaleString('en-IN')}`;
