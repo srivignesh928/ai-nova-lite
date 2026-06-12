@@ -640,7 +640,8 @@ const submitForm = async (event) => {
     const owner_type = ownerTypeSelect.value;
     const City = cityInput.value.trim();
     const state = stateInput.value.trim();
-    const premium_brand = premiumBrandInput.value === "Yes" ? 1 : 0;;
+    const premium_brand = premiumBrandInput.value === "Yes" ? 1 : 0;
+    const transaction_type = document.getElementById('transaction_type').value;
 
     if (!brand || !model || !variant || !fuel || !transmission || !body) {
         showStatus('Please select brand and model first.', true);
@@ -673,6 +674,7 @@ const submitForm = async (event) => {
         car_age,
         premium_brand,
         damage_description: damageDescriptionInput.value.trim() || null,
+        transaction_type: transaction_type,
     };
 
     try {
@@ -689,12 +691,67 @@ const submitForm = async (event) => {
         const result = await response.json();
         lastPredictionPayload = payload;
         lastPredictedPrice = result.predicted_price;
-        const formattedPrice = `₹ ${Number(result.predicted_price).toLocaleString('en-IN')}`;
+        
+        // Update transaction badge
+        const transactionBadge = document.getElementById('transactionBadge');
+        const badgeText = {
+            'selling': '🔴 Selling',
+            'buying_resale': '🟢 Buy-Resale',
+            'buying_personal': '🔵 Buy-Personal'
+        };
+        transactionBadge.textContent = badgeText[transaction_type] || 'Selling';
+        
+        // Update main price display
+        const formattedPrice = `₹ ${Number(result.transaction_price).toLocaleString('en-IN')}`;
         priceOutput.textContent = formattedPrice;
+        
+        // Update market value
+        document.getElementById('marketValue').textContent = `₹ ${Number(result.predicted_price).toLocaleString('en-IN')}`;
+        
+        // Update damage cost
         damageCostOutput.textContent = result.damage_cost ? `₹ ${Number(result.damage_cost).toLocaleString('en-IN')}` : '₹ 0';
+        
+        // Update confidence
         confidenceOutput.textContent = `${result.confidence_score}%`;
-        suggestedPriceOutput.textContent = `₹ ${Number(result.suggested_price).toLocaleString('en-IN')}`;
-        showStatus('Prediction Successful — final selling price suggested.');
+        
+        // Show/hide profit margin row
+        const profitRow = document.getElementById('profitRow');
+        if (transaction_type === 'buying_resale' && result.profit_margin) {
+            profitRow.style.display = 'flex';
+            document.getElementById('profitMargin').textContent = `₹ ${Number(result.profit_margin).toLocaleString('en-IN')}`;
+        } else {
+            profitRow.style.display = 'none';
+        }
+        
+        // Show/hide price range row
+        const priceRangeRow = document.getElementById('priceRangeRow');
+        if ((transaction_type === 'buying_resale' || transaction_type === 'buying_personal') && result.price_range_min && result.price_range_max) {
+            priceRangeRow.style.display = 'flex';
+            document.getElementById('priceRange').textContent = `₹ ${Number(result.price_range_min).toLocaleString('en-IN')} to ₹ ${Number(result.price_range_max).toLocaleString('en-IN')}`;
+        } else {
+            priceRangeRow.style.display = 'none';
+        }
+        
+        // Update final price label
+        const finalPriceLabel = document.getElementById('finalPriceLabel');
+        const labels = {
+            'selling': 'Selling Price',
+            'buying_resale': 'Max Buy Price',
+            'buying_personal': 'Fair Market Price'
+        };
+        finalPriceLabel.textContent = labels[transaction_type] || 'Transaction Price';
+        
+        // Update suggested price
+        suggestedPriceOutput.textContent = `₹ ${Number(result.transaction_price).toLocaleString('en-IN')}`;
+        
+        // Update status message
+        const statusMessages = {
+            'selling': 'Prediction Successful — selling price calculated.',
+            'buying_resale': 'Prediction Successful — max buy price for 10% profit.',
+            'buying_personal': 'Prediction Successful — fair market value calculated.'
+        };
+        showStatus(statusMessages[transaction_type] || 'Prediction Successful');
+        
         await refreshHistory();
     } catch (error) {
         console.error(error);

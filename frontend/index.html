@@ -117,7 +117,14 @@
                             <label>Car Age</label>
                             <input type="number" id="car_age" placeholder="5" required>
                         </div>
-                        <div class="form-group spacer"></div>
+                        <div class="form-group">
+                            <label>Transaction Type</label>
+                            <select id="transaction_type">
+                                <option value="selling">🔴 Selling (I want to sell)</option>
+                                <option value="buying_resale">🟢 Buying for Resale (10% profit)</option>
+                                <option value="buying_personal">🔵 Buying for Personal Use</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="field-row">
@@ -156,10 +163,14 @@
                             <h2>Estimated Market Price</h2>
                             <p>Your AI valuation result.</p>
                         </div>
-                        <span class="badge accent">Live</span>
+                        <span class="badge accent" id="transactionBadge">Selling</span>
                     </div>
                     <div id="price" class="price-tag">₹ --</div>
                     <div class="result-breakdown">
+                        <div class="result-row">
+                            <span>Market Value</span>
+                            <strong id="marketValue">₹ --</strong>
+                        </div>
                         <div class="result-row">
                             <span>Damage Cost</span>
                             <strong id="damageCost">₹ --</strong>
@@ -168,8 +179,16 @@
                             <span>Confidence</span>
                             <strong id="confidenceScore">--%</strong>
                         </div>
+                        <div class="result-row" id="profitRow" style="display:none;">
+                            <span>Expected Profit (10%)</span>
+                            <strong id="profitMargin">₹ --</strong>
+                        </div>
+                        <div class="result-row" id="priceRangeRow" style="display:none;">
+                            <span>Fair Price Range</span>
+                            <strong id="priceRange">₹ -- to ₹ --</strong>
+                        </div>
                         <div class="result-row final-price">
-                            <span>Suggested Selling Price</span>
+                            <span id="finalPriceLabel">Transaction Price</span>
                             <strong id="suggestedPrice">₹ --</strong>
                         </div>
                     </div>
