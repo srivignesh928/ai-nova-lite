@@ -394,35 +394,44 @@ const autofillVehicleFromVision = async (analysis) => {
         }
     }
 
-    if (matchedBrand) {
-        // Set brand and trigger change event
-        brandSelect.value = matchedBrand;
-        brandSearchInput.value = matchedBrand;
+    if (!matchedBrand) {
+        // Brand not found in database
+        showStatus(`⚠️ Brand "${analysis.detected_brand}" is not in our database yet. Price prediction for this brand is under development. Please select a brand manually or try another vehicle.`, true);
+        return;
+    }
+
+    // Set brand and trigger change event
+    brandSelect.value = matchedBrand;
+    brandSearchInput.value = matchedBrand;
+    
+    // Load models for this brand
+    await loadModels(matchedBrand);
+    
+    if (modelOptions.length === 0) {
+        showStatus(`⚠️ No models found for brand "${matchedBrand}". Price prediction is under development for this brand.`, true);
+        return;
+    }
+    
+    // Try to match model if detected
+    let matchedModel = null;
+    if (analysis.detected_model) {
+        const detectedModelLower = analysis.detected_model.toLowerCase();
+        matchedModel = modelOptions.find(m => 
+            m.toLowerCase().includes(detectedModelLower) || 
+            detectedModelLower.includes(m.toLowerCase())
+        );
+    }
+    
+    if (matchedModel) {
+        modelSelect.value = matchedModel;
+        await loadVehicleDetails(matchedBrand, matchedModel);
+    } else if (modelOptions.length > 0) {
+        // If no model match, select first model
+        modelSelect.value = modelOptions[0];
+        await loadVehicleDetails(matchedBrand, modelOptions[0]);
         
-        // Load models for this brand
-        await loadModels(matchedBrand);
-        
-        // Try to match model if detected
-        if (analysis.detected_model && modelOptions.length > 0) {
-            const detectedModelLower = analysis.detected_model.toLowerCase();
-            const matchedModel = modelOptions.find(m => 
-                m.toLowerCase().includes(detectedModelLower) || 
-                detectedModelLower.includes(m.toLowerCase())
-            );
-            
-            if (matchedModel) {
-                modelSelect.value = matchedModel;
-                // Load vehicle details (variants, fuel, transmission)
-                await loadVehicleDetails(matchedBrand, matchedModel);
-            } else if (modelOptions.length > 0) {
-                // If no model match, select first model
-                modelSelect.value = modelOptions[0];
-                await loadVehicleDetails(matchedBrand, modelOptions[0]);
-            }
-        } else if (modelOptions.length > 0) {
-            // No model detected, select first available model
-            modelSelect.value = modelOptions[0];
-            await loadVehicleDetails(matchedBrand, modelOptions[0]);
+        if (analysis.detected_model) {
+            showStatus(`ℹ️ Model "${analysis.detected_model}" not found. Selected "${modelOptions[0]}" instead. Please verify before prediction.`);
         }
     }
 
@@ -440,6 +449,11 @@ const autofillVehicleFromVision = async (analysis) => {
                 carAgeInput.value = computedAge;
             }
         }
+    }
+    
+    // Success message if everything matched
+    if (matchedBrand && matchedModel) {
+        showStatus(`✅ Form auto-filled successfully! Brand: ${matchedBrand}, Model: ${matchedModel}. Please verify and add remaining details.`);
     }
 };
 
